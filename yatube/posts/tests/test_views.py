@@ -248,8 +248,9 @@ class PagesTests(TestCase):
     def test_index_page_cache(self):
         """Index page cache test"""
         first_response = self.guest_client.get(reverse('posts:index'))
-        Post.objects.all().delete()
+        Post.objects.filter(pk=1).delete()
         second_response = self.guest_client.get(reverse('posts:index'))
         self.assertEqual(first_response.content, second_response.content)
         sleep(21)
-        self.assertNotEqual(first_response.content, second_response.content)
+        third_response = self.guest_client.get(reverse('posts:index'))
+        self.assertNotEqual(third_response.content, second_response.content)
