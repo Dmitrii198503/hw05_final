@@ -1,6 +1,6 @@
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth import get_user_model
-from ..models import Group, Post
+from ..models import Group, Post, Follow
 from django.urls import reverse
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -254,3 +254,73 @@ class PagesTests(TestCase):
         sleep(21)
         third_response = self.guest_client.get(reverse('posts:index'))
         self.assertNotEqual(third_response.content, second_response.content)
+
+    def test_follow_auth(self):
+        """Authorized user can follow and unfollow other users"""
+        following = User.objects.create_user(username='test_author')
+        first_response = self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': following}
+            ),
+            follow=True
+        )
+        self.assertRedirects(
+            first_response,
+            reverse(
+                'posts:profile',
+                kwargs={'username': following}
+            )
+        )
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user, author=following
+            ).exists()
+        )
+        second_response = self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': following}
+            ),
+            follow=True
+        )
+        self.assertRedirects(
+            second_response,
+            reverse(
+                'posts:profile',
+                kwargs={'username': following}
+            )
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user, author=following
+            ).exists()
+        )
+
+    def test_follow_index(self):
+        """New user post appears in followers favorites
+        and does not appear in non followers favorites
+        """
+        follower = User.objects.create_user(username='Follower')
+        authorized_client_1 = Client()
+        authorized_client_1.force_login(follower)
+        not_follower = User.objects.create_user(username='Not_Follower')
+        authorized_client_2 = Client()
+        authorized_client_2.force_login(not_follower)
+        Follow.objects.create(user=follower, author=self.user)
+        response_follower = authorized_client_1.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        response_not_follower = authorized_client_2.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        self.assertTrue(
+            response_follower.context['page_obj'].object_list
+        )
+        self.assertFalse(
+            response_not_follower.context['page_obj'].object_list
+        )
