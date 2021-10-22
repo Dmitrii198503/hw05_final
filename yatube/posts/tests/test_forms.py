@@ -132,6 +132,6 @@ class PostCreateEditTests(TestCase):
         )
         self.assertRedirects(
             response,
-            f'/auth/login/?next=/posts/{self.post_id}/comment'
+            f'/auth/login/?next=/posts/{self.post_id}/comment/'
         )
-        self.assertTrue(Comment.objects.count() != comment_count + 1)
+        self.assertEqual(Comment.objects.count(), comment_count)

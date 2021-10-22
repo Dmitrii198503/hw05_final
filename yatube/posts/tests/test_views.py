@@ -20,6 +20,7 @@ class PagesTests(TestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.user = User.objects.create_user(username='TestUser')
+        cls.following = User.objects.create_user(username='test_author')
         cls.group = Group.objects.create(
             title='Group',
             slug='test-slug',
@@ -257,43 +258,45 @@ class PagesTests(TestCase):
 
     def test_follow_auth(self):
         """Authorized user can follow and unfollow other users"""
-        following = User.objects.create_user(username='test_author')
-        first_response = self.authorized_client.get(
+        response = self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
-                kwargs={'username': following}
+                kwargs={'username': self.following}
             ),
             follow=True
         )
         self.assertRedirects(
-            first_response,
+            response,
             reverse(
                 'posts:profile',
-                kwargs={'username': following}
+                kwargs={'username': self.following}
             )
         )
         self.assertTrue(
             Follow.objects.filter(
-                user=self.user, author=following
+                user=self.user, author=self.following
             ).exists()
         )
-        second_response = self.authorized_client.get(
+
+    def test_unfollow_auth(self):
+        Follow.objects.create(user=self.user, author=self.following)
+        response = self.authorized_client.get(
             reverse(
                 'posts:profile_unfollow',
-                kwargs={'username': following}
+                kwargs={'username': self.following}
             ),
             follow=True
         )
         self.assertRedirects(
-            second_response,
+            response,
             reverse(
                 'posts:profile',
-                kwargs={'username': following}
+                kwargs={'username': self.following}
             )
         )
         self.assertFalse(
             Follow.objects.filter(
-                user=self.user, author=following
+                user=self.user, author=self.following
             ).exists()
         )
 

@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from ..models import Group, Post
 from http import HTTPStatus
+from django.urls import reverse
 
 
 User = get_user_model()
@@ -32,12 +33,18 @@ class URLTests(TestCase):
     def test_urls_uses_correct_template_guest_user(self):
         """URL matches appropriate template for guest user"""
         templates_url_names = {
-            '/': 'posts/index.html',
-            f'/group/{self.slug}/': 'posts/group_list.html',
-            '/profile/TestUser/': 'posts/profile.html',
-            f'/posts/{self.post_id}/': 'posts/post_detail.html',
-            f'/posts/{self.post_id}/edit/': 'users/login.html',
-            '/create/': 'users/login.html',
+            reverse('posts:index'): 'posts/index.html',
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.slug}): 'posts/group_list.html',
+            reverse('posts:profile',
+                    kwargs={'username': self.user}): 'posts/profile.html',
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_id}
+            ): 'posts/post_detail.html',
+            reverse('posts:post_edit',
+                    kwargs={'post_id': self.post_id}): 'users/login.html',
+            reverse('posts:post_create'): 'users/login.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
@@ -47,12 +54,20 @@ class URLTests(TestCase):
     def test_urls_uses_correct_template_authorized_user(self):
         """URL matches appropriate template for authorized user"""
         templates_url_names = {
-            '/': 'posts/index.html',
-            f'/group/{self.slug}/': 'posts/group_list.html',
-            '/profile/TestUser/': 'posts/profile.html',
-            f'/posts/{self.post_id}/': 'posts/post_detail.html',
-            f'/posts/{self.post_id}/edit/': 'posts/create_post.html',
-            '/create/': 'posts/create_post.html',
+            reverse('posts:index'): 'posts/index.html',
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.slug}): 'posts/group_list.html',
+            reverse('posts:profile',
+                    kwargs={'username': self.user}): 'posts/profile.html',
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_id}
+            ): 'posts/post_detail.html',
+            reverse(
+                'posts:post_edit',
+                kwargs={'post_id': self.post_id}
+            ): 'posts/create_post.html',
+            reverse('posts:post_create'): 'posts/create_post.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
@@ -62,12 +77,20 @@ class URLTests(TestCase):
     def test_HTTP_status_guest(self):
         """URL matches appropriate value for guest user"""
         URL_values = {
-            '/': HTTPStatus.OK.value,
-            f'/group/{self.slug}/': HTTPStatus.OK.value,
-            '/profile/TestUser/': HTTPStatus.OK.value,
-            f'/posts/{self.post_id}/': HTTPStatus.OK.value,
-            f'/posts/{self.post_id}/edit/': HTTPStatus.FOUND.value,
-            '/create/': HTTPStatus.FOUND.value,
+            reverse('posts:index'): HTTPStatus.OK.value,
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.slug}): HTTPStatus.OK.value,
+            reverse('posts:profile',
+                    kwargs={'username': self.user}): HTTPStatus.OK.value,
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_id}
+            ): HTTPStatus.OK.value,
+            reverse(
+                'posts:post_edit',
+                kwargs={'post_id': self.post_id}
+            ): HTTPStatus.FOUND.value,
+            reverse('posts:post_create'): HTTPStatus.FOUND.value,
             '/unexisting_page/': HTTPStatus.NOT_FOUND.value,
         }
         for address, value in URL_values.items():
@@ -78,12 +101,20 @@ class URLTests(TestCase):
     def test_HTTP_status_authorized(self):
         """URL matches appropriate value for authorized user"""
         URL_values = {
-            '/': HTTPStatus.OK.value,
-            f'/group/{self.slug}/': HTTPStatus.OK.value,
-            '/profile/TestUser/': HTTPStatus.OK.value,
-            f'/posts/{self.post_id}/': HTTPStatus.OK.value,
-            f'/posts/{self.post_id}/edit/': HTTPStatus.OK.value,
-            '/create/': HTTPStatus.OK.value,
+            reverse('posts:index'): HTTPStatus.OK.value,
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.slug}): HTTPStatus.OK.value,
+            reverse('posts:profile',
+                    kwargs={'username': self.user}): HTTPStatus.OK.value,
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_id}
+            ): HTTPStatus.OK.value,
+            reverse(
+                'posts:post_edit',
+                kwargs={'post_id': self.post_id}
+            ): HTTPStatus.OK.value,
+            reverse('posts:post_create'): HTTPStatus.OK.value,
             '/unexisting_page/': HTTPStatus.NOT_FOUND.value,
         }
         for address, value in URL_values.items():

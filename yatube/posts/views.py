@@ -4,7 +4,6 @@ from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 from .forms import CommentForm, PostForm
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
 
 
 User = get_user_model()
@@ -135,17 +134,17 @@ def profile_follow(request, username):
     user = request.user
     author = User.objects.get(username=username)
     if user != author:
-        try:
-            Follow.objects.get(user=user, author=author)
-        except ObjectDoesNotExist:
-            Follow.objects.create(user=user, author=author)
-            return redirect('posts:profile', username)
+        Follow.objects.get_or_create(user=user, author=author)
+        return redirect('posts:profile', username)
     return redirect('posts:profile', username)
 
 
 @login_required
 def profile_unfollow(request, username):
     user = request.user
-    author = User.objects.get(username=username)
-    Follow.objects.get(user=user, author=author).delete()
+    author = User.objects.filter(username=username)[0]
+    Follow.objects.get(
+        user=user,
+        author=author
+    ).delete()
     return redirect('posts:profile', username)
