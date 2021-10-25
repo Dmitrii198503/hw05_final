@@ -6,7 +6,7 @@
     <!-- класс py-5 создает отступы сверху и снизу блока -->
     {% include 'includes/switcher.html' %}
     <div class="container py-5">
-      {% cache 20 index_page %}
+      {% cache 4 index_page %}
       {% for post in page_obj %}
         <ul>
           <li>
